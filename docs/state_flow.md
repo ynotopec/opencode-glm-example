@@ -1,8 +1,8 @@
 # Router & Decision Flow - State File
 
-## 🗺️ Router/Decision Flow Diagram
+## Router/Decision Flow Diagram
 
-Cette section capture la logique de routage et de prise de décision du système.
+This section captures routing logic and decision-making in the system.
 
 ```mermaid
 flowchart TB
@@ -25,20 +25,20 @@ flowchart TB
     G -->|/| INDEX[Route: /]
     G -->|/results| RESULTS[Route: /results]
 
-    %% Traîtement des routes
+    %% Processing routes
     VOTE --> VALIDATE{Validate Input}
 
     VALIDATE -->|Invalid ID| ERROR1[Return Error Response]
     VALIDATE -->|Valid ID 1-5| INC[Increment Votes]
 
-    INC --> REDIRECT[Rediriger vers /results]
-    REDIRECT --> CALC[Calculer pourcentages]
-    CALC --> SORT[Tri décroissant]
+    INC --> REDIRECT[Redirect to /results]
+    REDIRECT --> CALC[Calculate percentages]
+    CALC --> SORT[Sort descending]
 
-    SORT --> NEXT_VOTE{Autre vote}
+    SORT --> NEXT_VOTE{Another vote}
 
-    RESET --> CLEAR_DATA [Réinitialiser candidates]
-    CLEAR_DATA --> REDIRECT_RESET [Rediriger vers /results]
+    RESET --> CLEAR_DATA [Reset candidates data]
+    CLEAR_DATA --> REDIRECT_RESET [Redirect to /results]
 
     INDEX --> RENDER_INDEX[Render template index.html]
     RESULTS --> RENDER_RESULTS[Render template results.html]
@@ -69,49 +69,57 @@ flowchart TB
 
 ### 1. Route Identification
 ```
-Entrée : HTTP Request (method + path)
+Input : HTTP Request (method + path)
 ↓
-┌─────────────────────────────┐
-│       METHOD = POST         │
-├─────────────────────────────┤
-│   Path = /vote ?            │
-│   ├─ OUI → Traiter vote     │
-│   └─ NON → Vérifier reset   │
-└─────────────────────────────┘
+┌─────────────────┐
+│     METHOD = POST│
+├─────────────────┤
+│   Path = /vote ? │
+│   ├─ YES → Process vote
+│   └─ NO -> Check reset
+└─────────────────┘
         ↓
    Path = /reset ? (Route reset)
-        ├─ OUI → Réinitialiser données
-        └─ NON → ERREUR 404
+        ├─ YES -> Reset data
+        └─ NO -> ERROR 404
 ```
 
-### 2. Validation Entrée
+### 2. Input Validation
 ```
-Entrée : candidate_id (from POST /vote)
+Input : candidate_id (from POST /vote)
 ↓
-┌─────────────────────────────┐
-│   Type int, Pas None         │
-├─────────────────────────────┤
-│   1 ≤ ID ≤ len(candidates)  │
-├─────────────────────────────┤
-│   Validation ?               │
-│   ├─ OUI → Increment votes  │
-│   └─ NON → Ignorer vote     │
-└─────────────────────────────┘
+┌─────────────────┐
+│   Type int, No None│
+├─────────────────┤
+│   1 <= ID <= len(candidates)
+├─────────────────┤
+│   Validation ?   │
+│   ├─ YES -> Increment votes
+│   └─ NO -> Ignore vote
+└─────────────────┘
+        ↓
+┌─────────────────┐
+│   Total = sum of votes
+├─────────────────┤
+│   Percentage = vote/total
+├─────────────────┤
+│   Sort by % desc
+└─────────────────┘
 ```
 
 ### 3. Calcul Résultats
 ```
-Entrée : Données candidats
+Input : Données candidats
 ↓
-┌─────────────────────────────┐
-│   Calcul total = sum(votes) │
-├─────────────────────────────┤
-│   Pourcentage = vote/total  │
-├─────────────────────────────┤
-│   Trier par % décroissant   │
-├─────────────────────────────┤
-│   Créer liste classée       │
-└─────────────────────────────┘
+┌───────────┬────────────────┐
+│ Calcul total = sum(votes)   │
+├─┬─────────┴────────────────┤
+│ │ Percentage = vote/total  │
+├─┼─────────────────────────┤
+│ │ Sort par % desc          │
+├─┴─────────────────────────┤
+│ | Créer liste classée      │
+└────────────────────────────┘
 ```
 
 ## ⚡ Critical Test Case Sequence
@@ -143,7 +151,7 @@ sequenceDiagram
     else candidate_id not in range
         Server->>Server: Log: Vote rejected (invalid ID)
         Server->>Browser: REDIRECT (302) to /results
-        Note over Server,Browser: Show current results (non-vote counted)
+        Note over Server,Browser: Show current results (no vote counted)
     end
 
     Browser->>Server: HTTP GET /results
@@ -154,10 +162,10 @@ sequenceDiagram
     Server-->>Browser: Response: Updated results page
     Note over Browser: Vote 99 ignored, other votes unchanged
 
-    User->>User: Voir résultats avec 0 votes ajoutés
+    User->>User: See results with 0 votes added
 ```
 
-## 🔄 State Transition Diagram
+## State Transition Diagram
 
 ```mermaid
 stateDiagram-v2
