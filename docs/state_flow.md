@@ -37,7 +37,7 @@ flowchart TB
 
     SORT --> NEXT_VOTE{Another vote}
 
-    RESET --> CLEAR_DATA [Reset candidates data]
+    RESET --> CLEAR_DATA [ Reset candidates data ]
     CLEAR_DATA --> REDIRECT_RESET [Redirect to /results]
 
     INDEX --> RENDER_INDEX[Render template index.html]
